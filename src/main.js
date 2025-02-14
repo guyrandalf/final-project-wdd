@@ -1,25 +1,49 @@
-import './style.css'
+import './style.css';
+import { movies } from './modules/movies';
+import { WishlistService } from './services/wishlist';
 
-// Initial movie data
-const movies = [
-  { id: 1, title: "Inception", year: 2010, image: "https://placehold.co/300x400" },
-  { id: 2, title: "The Dark Knight", year: 2008, image: "https://placehold.co/300x400" },
-  { id: 3, title: "Interstellar", year: 2014, image: "https://placehold.co/300x400" }
-];
+const wishlistService = new WishlistService();
 
-// Render movies to the page
-document.querySelector('#app').innerHTML = `
-  <div>
-    <h1>My Movie Collection</h1>
+function renderMovies() {
+  document.querySelector('#app').innerHTML = `
+    <div class="header">
+      <h1>Movie Collection</h1>
+      <p>Discover and save your favorite movies</p>
+    </div>
     <div class="movie-grid">
       ${movies.map(movie => `
         <div class="movie-card" data-id="${movie.id}">
           <img src="${movie.image}" alt="${movie.title}">
           <h3>${movie.title}</h3>
-          <p>${movie.year}</p>
-          <button class="wishlist-btn">Add to Wishlist</button>
+          <p>${movie.year} • ⭐ ${movie.rating}</p>
+          <p class="description">${movie.description}</p>
+          <button class="wishlist-btn ${wishlistService.isInWishlist(movie.id) ? 'added' : ''}">
+            ${wishlistService.isInWishlist(movie.id) ? 'Remove from Wishlist' : 'Add to Wishlist'}
+          </button>
         </div>
       `).join('')}
     </div>
-  </div>
-`
+  `;
+
+  // Add event listeners
+  document.querySelectorAll('.wishlist-btn').forEach(button => {
+    button.addEventListener('click', (e) => {
+      const movieCard = e.target.closest('.movie-card');
+      const movieId = parseInt(movieCard.dataset.id);
+      const movie = movies.find(m => m.id === movieId);
+
+      if (wishlistService.isInWishlist(movieId)) {
+        wishlistService.removeFromWishlist(movieId);
+        button.textContent = 'Add to Wishlist';
+        button.classList.remove('added');
+      } else {
+        wishlistService.addToWishlist(movie);
+        button.textContent = 'Remove from Wishlist';
+        button.classList.add('added');
+      }
+    });
+  });
+}
+
+// Initial render
+renderMovies();
