@@ -153,3 +153,68 @@
 .close-modal:hover {
   background: #2563eb;
 }
+
+.movie-detail-page {
+  padding: 2rem;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.back-btn {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 0.75em 1.5em;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-bottom: 2rem;
+}
+
+.movie-detail-content {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 2rem;
+}
+
+.movie-detail-content img {
+  width: 100%;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.movie-info h1 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.year-rating {
+  font-size: 1.2rem;
+  color: #64748b;
+  margin-bottom: 1.5rem;
+}
+
+.description {
+  line-height: 1.7;
+  color: #334155;
+}
+
+@media (max-width: 768px) {
+  .movie-detail-content {
+    grid-template-columns: 1fr;
+  }
+}
+
+.movie-card {
+  cursor: pointer;
+}
+
+.movie-info .wishlist-btn {
+  margin-top: 1rem;
+  font-size: 1.1rem;
+  padding: 1em 2em;
+}
+
+.movie-card .wishlist-btn:hover,
+.movie-info .wishlist-btn:hover {
+  transform: scale(1.05);
+}

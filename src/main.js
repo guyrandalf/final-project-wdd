@@ -2,10 +2,34 @@ import './style.css';
 import { MovieApi } from './services/movieApi';
 import { WishlistService } from './services/wishlist';
 import { renderNavigation } from './components/navigation';
-import { showMovieDetails } from './components/movie-details';
+import { Router } from './utils/router';
+import { homeView } from './views/home';
+import { movieDetailView } from './views/movie-detail';
 
 const wishlistService = new WishlistService();
 let movies = [];
+
+// routes for moving to other page
+const routes = [
+  {
+    path: '/',
+    view: () => homeView(movies)
+  },
+  {
+    path: '/wishlist',
+    view: () => homeView(wishlistService.getWishlist())
+  },
+  {
+    path: '/movie/:id',
+    view: (params) => {
+      const movie = movies.find(m => m.id === parseInt(params.id));
+      const isInWishlist = wishlistService.isInWishlist(movie.id);
+      return movieDetailView(movie, isInWishlist);
+    }
+  }
+];
+
+const router = new Router(routes);
 
 async function initializeApp() {
   try {
@@ -30,7 +54,7 @@ function renderApp() {
   `;
 
   setupNavigationListeners();
-  renderMovieGrid(movies);
+  router.handleLocation();
 }
 
 function setupNavigationListeners() {
@@ -39,70 +63,50 @@ function setupNavigationListeners() {
       e.preventDefault();
       const page = e.target.dataset.page;
       if (page === 'home') {
-        renderMovieGrid(movies);
+        router.navigate('/');
       } else if (page === 'wishlist') {
-        renderMovieGrid(wishlistService.getWishlist());
+        router.navigate('/wishlist');
       }
     });
   });
+
+  document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('wishlist-btn')) {
+      e.stopPropagation();
+      const movieId = parseInt(e.target.dataset.id);
+      const movie = movies.find(m => m.id === movieId);
+      
+      if (wishlistService.isInWishlist(movieId)) {
+        wishlistService.removeFromWishlist(movieId);
+        e.target.textContent = 'Add to Wishlist';
+        e.target.classList.remove('added');
+      } else {
+        wishlistService.addToWishlist(movie);
+        e.target.textContent = 'Remove from Wishlist';
+        e.target.classList.add('added');
+      }
+    }
+
+    const movieCard = e.target.closest('.movie-card');
+    if (movieCard && !e.target.classList.contains('wishlist-btn')) {
+      const movieId = movieCard.dataset.id;
+      router.navigate(`/movie/${movieId}`);
+    }
+  });
 }
 
-function renderMovieGrid(moviesToShow) {
-  const content = document.querySelector('#content');
-  content.innerHTML = `
-    <div class="movie-grid">
-      ${moviesToShow.map(movie => renderMovieCard(movie)).join('')}
-    </div>
-  `;
-
-  setupMovieCardListeners();
-}
-
-function renderMovieCard(movie) {
+export function renderMovieCard(movie) {
   const isInWishlist = wishlistService.isInWishlist(movie.id);
   return `
     <div class="movie-card" data-id="${movie.id}">
       <img src="${movie.image}" alt="${movie.title}">
       <h3>${movie.title}</h3>
       <p>${movie.year} • ⭐ ${movie.rating}</p>
-      <button class="view-details-btn">View Details</button>
-      <button class="wishlist-btn ${isInWishlist ? 'added' : ''}">
+      <button class="wishlist-btn ${isInWishlist ? 'added' : ''}" data-id="${movie.id}">
         ${isInWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'}
       </button>
     </div>
   `;
-}
-
-function setupMovieCardListeners() {
-  // View Details listeners
-  document.querySelectorAll('.view-details-btn').forEach(button => {
-    button.addEventListener('click', (e) => {
-      const movieId = parseInt(e.target.closest('.movie-card').dataset.id);
-      const movie = movies.find(m => m.id === movieId);
-      showMovieDetails(movie);
-    });
-  });
-
-  // Wishlist button listeners
-  document.querySelectorAll('.wishlist-btn').forEach(button => {
-    button.addEventListener('click', handleWishlistClick);
-  });
-}
-
-function handleWishlistClick(e) {
-  const movieCard = e.target.closest('.movie-card');
-  const movieId = parseInt(movieCard.dataset.id);
-  const movie = movies.find(m => m.id === movieId);
-
-  if (wishlistService.isInWishlist(movieId)) {
-    wishlistService.removeFromWishlist(movieId);
-    e.target.textContent = 'Add to Wishlist';
-    e.target.classList.remove('added');
-  } else {
-    wishlistService.addToWishlist(movie);
-    e.target.textContent = 'Remove from Wishlist';
-    e.target.classList.add('added');
-  }
 }
 
 initializeApp();
